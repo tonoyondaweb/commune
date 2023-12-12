@@ -15,6 +15,6 @@ export default {
       },
     },
   },
-  plugins: [nextui()],
+  plugins: [nextui(), require("tailwindcss-brand-colors")],
   darkMode: "class",
 } satisfies Config;
