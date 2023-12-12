@@ -9,6 +9,8 @@ import DiscordProvider from "next-auth/providers/discord";
 import { env } from "@/env";
 import { db } from "@/server/db";
 import { sqliteTable } from "drizzle-orm/sqlite-core";
+import { accounts, users } from "./db/schema";
+import { and, eq } from "drizzle-orm";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -46,8 +48,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   },
-  //@ts-expect-error https://github.com/nextauthjs/next-auth/discussions/8828#discussioncomment-7342114
-  adapter: DrizzleAdapter(db, sqliteTable),
+  adapter: getAdapter(),
   providers: [
     DiscordProvider({
       clientId: env.DISCORD_CLIENT_ID,
@@ -76,3 +77,29 @@ export const authOptions: NextAuthOptions = {
  * @see https://next-auth.js.org/configuration/nextjs
  */
 export const getServerAuthSession = () => getServerSession(authOptions);
+
+// fix for login bug using drizzle adapter https://github.com/linyiru/nextjs-drizzle-nextauth/commit/27ee0dbf2d52af1f9b756ecbe891f79fbb88b952
+function getAdapter() {
+  return {
+    //@ts-expect-error https://github.com/nextauthjs/next-auth/discussions/8828#discussioncomment-7342114
+    ...DrizzleAdapter(db),
+    async getUserByAccount(providerAccount: {
+      provider: string;
+      providerAccountId: string;
+    }) {
+      const results = await db
+        .select()
+        .from(accounts)
+        .leftJoin(users, eq(users.id, accounts.userId))
+        .where(
+          and(
+            eq(accounts.provider, providerAccount.provider),
+            eq(accounts.providerAccountId, providerAccount.providerAccountId),
+          ),
+        )
+        .get();
+
+      return results?.user ?? null;
+    },
+  };
+}
