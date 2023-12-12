@@ -14,6 +14,7 @@ type Props = {
 export default function UIProvider({ children }: Props) {
   const router = useRouter();
   return (
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     <NextUIProvider navigate={router.push}>
       <NextThemesProvider attribute="class" defaultTheme="system">
         {children}
