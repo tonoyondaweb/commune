@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import UIProvider from "./_components/ui-provider";
+import NavContainer from "./_components/nav/container";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className={`font-sans ${inter.variable}`}>
         <UIProvider>
           <TRPCReactProvider cookies={cookies().toString()}>
+            <NavContainer />
             {children}
           </TRPCReactProvider>
         </UIProvider>
